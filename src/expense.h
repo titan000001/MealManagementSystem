@@ -6,16 +6,16 @@
 
 struct Expense {
     int id;
-    std::string date;
-    std::string item;
+    std::string purchase_date;
+    std::string item_name;
     double price;
     int paid_by_user_id;
     std::string paid_by_user_name; // To hold the name of the user who paid
     std::string category;
 };
 
-bool addExpense(const std::string& date, const std::string& item, double price, int paid_by_user_id, const std::string& category);
-bool editExpense(int id, const std::string& item, double price, const std::string& category);
+bool addExpense(const std::string& purchase_date, const std::string& item_name, double price, int paid_by_user_id, const std::string& category);
+bool editExpense(int id, const std::string& item_name, double price, const std::string& category);
 bool deleteExpense(int id);
 std::vector<Expense> getAllExpenses();
 std::vector<Expense> getExpensesByCategory(const std::string& category);

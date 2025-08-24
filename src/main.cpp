@@ -43,6 +43,26 @@ double getDoubleInput() {
     return value;
 }
 
+// Helper function to select menu items for a meal type
+std::vector<MenuItem> selectMenuItemsForMeal(const std::string& mealTypeName) {
+    std::vector<MenuItem> selectedItems;
+    int itemId = -1;
+    std::cout << "\nEnter menu item IDs for " << mealTypeName << " (enter 0 to finish):\n";
+    while (true) {
+        std::cout << "> ";
+        itemId = getIntegerInput();
+        if (itemId == 0) {
+            break;
+        }
+        // The database foreign key will reject invalid IDs.
+        // A more advanced UI could validate the ID here against the list of all items.
+        MenuItem item;
+        item.id = itemId;
+        selectedItems.push_back(item);
+    }
+    return selectedItems;
+}
+
 int main() {
     sql::Connection* con = getConnection();
         if (con) {
@@ -89,6 +109,7 @@ int main() {
                         std::cout << "2. Login" << std::endl;
                         std::cout << "3. View Profile" << std::endl;
                         std::cout << "4. Update Profile" << std::endl;
+                        std::cout << "5. View All Users" << std::endl;
                         std::cout << "0. Back" << std::endl;
                         std::cout << "Enter your choice: ";
                         userChoice = getIntegerInput();
@@ -153,6 +174,27 @@ int main() {
                                 }
                                 break;
                             }
+                            case 5: {
+                                std::vector<User> users = getAllUsers();
+                                if (users.empty()) {
+                                    std::cout << "No users found." << std::endl;
+                                } else {
+                                    std::cout << "\n--- All Registered Users ---" << std::endl;
+                                    std::cout << std::left << std::setw(5) << "ID"
+                                              << std::setw(20) << "Username"
+                                              << std::setw(30) << "Full Name"
+                                              << "Role" << std::endl;
+                                    std::cout << std::string(70, '-') << std::endl;
+                                    for (const auto& user : users) {
+                                        std::string roleStr = (user.role == UserRole::Admin) ? "Admin" : (user.role == UserRole::Staff) ? "Staff" : "Student";
+                                        std::cout << std::left << std::setw(5) << user.id
+                                                  << std::setw(20) << user.username
+                                                  << std::setw(30) << user.name
+                                                  << roleStr << std::endl;
+                                    }
+                                }
+                                break;
+                            }
                             case 0:
                                 std::cout << "Returning to main menu..." << std::endl;
                                 break;
@@ -162,9 +204,74 @@ int main() {
                     }
                     break;
                 }
-                case 3:
-                    std::cout << "[Stub] Menu Management" << std::endl;
-                    // TODO: Call menu management functions
+                case 3: {
+                    int menuChoice = -1;
+                    while (menuChoice != 0) {
+                        std::cout << "\n--- Menu Management ---" << std::endl;
+                        std::cout << "1. Add Menu Item" << std::endl;
+                        std::cout << "2. View All Menu Items" << std::endl;
+                        std::cout << "3. Set Daily Menu" << std::endl;
+                        std::cout << "0. Back" << std::endl;
+                        std::cout << "Enter your choice: ";
+                        menuChoice = getIntegerInput();
+
+                        switch (menuChoice) {
+                            case 1: {
+                                std::string itemName;
+                                std::cout << "Enter the name of the new menu item: ";
+                                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                                std::getline(std::cin, itemName);
+                                if (addMenuItem(itemName)) {
+                                    std::cout << "Menu item '" << itemName << "' added successfully." << std::endl;
+                                } else {
+                                    std::cout << "Failed to add menu item." << std::endl;
+                                }
+                                break;
+                            }
+                            case 2: {
+                                std::vector<MenuItem> items = getAllMenuItems();
+                                if (items.empty()) {
+                                    std::cout << "No menu items found." << std::endl;
+                                } else {
+                                    std::cout << "\n--- All Menu Items ---" << std::endl;
+                                    std::cout << std::left << std::setw(5) << "ID"
+                                              << "Name" << std::endl;
+                                    std::cout << std::string(40, '-') << std::endl;
+                                    for (const auto& item : items) {
+                                        std::cout << std::left << std::setw(5) << item.id
+                                                  << item.name << std::endl;
+                                    }
+                                }
+                                break;
+                            }
+                            case 3: {
+                                std::string date;
+                                std::cout << "Enter date for the menu (YYYY-MM-DD): ";
+                                std::cin >> date;
+
+                                // Show available items to the user
+                                std::cout << "\n--- Available Menu Items ---" << std::endl;
+                                std::vector<MenuItem> allItems = getAllMenuItems();
+                                for (const auto& item : allItems) {
+                                    std::cout << "ID: " << item.id << " - " << item.name << std::endl;
+                                }
+
+                                std::vector<MenuItem> breakfast = selectMenuItemsForMeal("Breakfast");
+                                std::vector<MenuItem> lunch = selectMenuItemsForMeal("Lunch");
+                                std::vector<MenuItem> dinner = selectMenuItemsForMeal("Dinner");
+
+                                if (setDailyMenu(date, breakfast, lunch, dinner)) {
+                                    std::cout << "Successfully set the menu for " << date << "." << std::endl;
+                                } else {
+                                    std::cout << "Failed to set the menu. Please check for invalid item IDs." << std::endl;
+                                }
+                                break;
+                            }
+                            case 0: break;
+                            default: std::cout << "Invalid choice or feature not yet implemented." << std::endl;
+                        }
+                    }
+                }
                     break;
                 case 4:
                     {
@@ -221,8 +328,8 @@ int main() {
                                             std::cout << std::string(92, '-') << std::endl;
                                             for (const auto& exp : expenses) {
                                                 std::cout << std::left << std::setw(5) << exp.id
-                                                          << std::setw(12) << exp.date
-                                                          << std::setw(30) << exp.item
+                                                          << std::setw(12) << exp.purchase_date
+                                                          << std::setw(30) << exp.item_name
                                                           << std::setw(15) << exp.category
                                                           << std::setw(20) << exp.paid_by_user_name
                                                           << std::right << std::setw(10) << std::fixed << std::setprecision(2) << exp.price << std::endl;

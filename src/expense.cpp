@@ -6,15 +6,15 @@
 #include <memory>
 #include <vector>
 
-bool addExpense(const std::string& date, const std::string& item, double price, int paid_by_user_id, const std::string& category) {
+bool addExpense(const std::string& purchase_date, const std::string& item_name, double price, int paid_by_user_id, const std::string& category) {
     try {
         sql::Connection* con = getConnection();
         // Using STR_TO_DATE to convert the string date from the user to a SQL DATE type
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("INSERT INTO expenses (purchase_date, item_name, price, paid_by_user_id, category) VALUES (STR_TO_DATE(?, '%Y-%m-%d'), ?, ?, ?, ?)")
         );
-        pstmt->setString(1, date);
-        pstmt->setString(2, item);
+        pstmt->setString(1, purchase_date);
+        pstmt->setString(2, item_name);
         pstmt->setDouble(3, price);
         pstmt->setInt(4, paid_by_user_id);
         pstmt->setString(5, category);
@@ -29,13 +29,13 @@ bool addExpense(const std::string& date, const std::string& item, double price, 
 // Stubs for other functions declared in expense.h
 // These can be implemented later.
 
-bool editExpense(int id, const std::string& item, double price, const std::string& category) {
+bool editExpense(int id, const std::string& item_name, double price, const std::string& category) {
     try {
         sql::Connection* con = getConnection();
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("UPDATE expenses SET item_name = ?, price = ?, category = ? WHERE id = ?")
         );
-        pstmt->setString(1, item);
+        pstmt->setString(1, item_name);
         pstmt->setDouble(2, price);
         pstmt->setString(3, category);
         pstmt->setInt(4, id);
@@ -73,8 +73,8 @@ std::vector<Expense> getAllExpenses() {
         while (res->next()) {
             Expense expense;
             expense.id = res->getInt("id");
-            expense.date = res->getString("purchase_date");
-            expense.item = res->getString("item_name");
+            expense.purchase_date = res->getString("purchase_date");
+            expense.item_name = res->getString("item_name");
             expense.price = res->getDouble("price");
             expense.paid_by_user_name = res->getString("paid_by_user_name");
             expense.category = res->getString("category");
