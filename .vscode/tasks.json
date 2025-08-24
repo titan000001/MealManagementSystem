@@ -10,6 +10,7 @@
                 "src/database.cpp",
                 "src/user.cpp",
                 "src/period.cpp",
+                "src/expense.cpp",
                 "-o",
                 "MealManagementSystem",
                 "-lmysqlcppconn",

@@ -10,6 +10,7 @@ struct Expense {
     std::string item;
     double price;
     int paid_by_user_id;
+    std::string paid_by_user_name; // To hold the name of the user who paid
     std::string category;
 };
 

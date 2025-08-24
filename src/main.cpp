@@ -15,6 +15,7 @@
 #include <cppconn/statement.h>
 #include <memory>
 #include <limits>
+#include <iomanip>
 
 // Helper function for robust integer input to prevent crashes on non-numeric input.
 int getIntegerInput() {
@@ -22,6 +23,19 @@ int getIntegerInput() {
     std::cin >> value;
     while (std::cin.fail()) {
         std::cout << "Invalid input. Please enter a whole number: ";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin >> value;
+    }
+    return value;
+}
+
+// Helper function for robust double input.
+double getDoubleInput() {
+    double value;
+    std::cin >> value;
+    while (std::cin.fail()) {
+        std::cout << "Invalid input. Please enter a number: ";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cin >> value;
@@ -160,19 +174,95 @@ int main() {
                             std::cout << "1. Add Expense" << std::endl;
                             std::cout << "2. View All Expenses" << std::endl;
                             std::cout << "3. Delete Expense" << std::endl;
+                            std::cout << "4. Edit Expense" << std::endl;
                             std::cout << "0. Back" << std::endl;
                             std::cout << "Enter your choice: ";
                             expenseChoice = getIntegerInput();
 
                             switch (expenseChoice) {
                                 case 1:
-                                    std::cout << "[Stub] Call addExpense function" << std::endl;
+                                    {
+                                        std::string date, item, category;
+                                        double price;
+                                        int userId;
+
+                                        std::cout << "Enter purchase date (YYYY-MM-DD): ";
+                                        std::cin >> date;
+                                        std::cout << "Enter item name: ";
+                                        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                                        std::getline(std::cin, item);
+                                        std::cout << "Enter price: ";
+                                        price = getDoubleInput();
+                                        std::cout << "Enter ID of user who paid: ";
+                                        userId = getIntegerInput();
+                                        std::cout << "Enter category (e.g., Groceries, Supplies): ";
+                                        std::cin >> category;
+
+                                        if (addExpense(date, item, price, userId, category)) {
+                                            std::cout << "Expense added successfully!" << std::endl;
+                                        } else {
+                                            std::cout << "Failed to add expense." << std::endl;
+                                        }
+                                    }
                                     break;
                                 case 2:
-                                    std::cout << "[Stub] Call getAllExpenses function" << std::endl;
+                                    {
+                                        std::vector<Expense> expenses = getAllExpenses();
+                                        if (expenses.empty()) {
+                                            std::cout << "No expenses found." << std::endl;
+                                        } else {
+                                            std::cout << "\n--- All Expenses ---" << std::endl;
+                                            std::cout << std::left << std::setw(5) << "ID"
+                                                      << std::setw(12) << "Date"
+                                                      << std::setw(30) << "Item"
+                                                      << std::setw(15) << "Category"
+                                                      << std::setw(20) << "Paid By"
+                                                      << std::right << std::setw(10) << "Price" << std::endl;
+                                            std::cout << std::string(92, '-') << std::endl;
+                                            for (const auto& exp : expenses) {
+                                                std::cout << std::left << std::setw(5) << exp.id
+                                                          << std::setw(12) << exp.date
+                                                          << std::setw(30) << exp.item
+                                                          << std::setw(15) << exp.category
+                                                          << std::setw(20) << exp.paid_by_user_name
+                                                          << std::right << std::setw(10) << std::fixed << std::setprecision(2) << exp.price << std::endl;
+                                            }
+                                        }
+                                    }
                                     break;
                                 case 3:
-                                    std::cout << "[Stub] Call deleteExpense function" << std::endl;
+                                    {
+                                        int id;
+                                        std::cout << "Enter the ID of the expense to delete: ";
+                                        id = getIntegerInput();
+                                        if (deleteExpense(id)) {
+                                            std::cout << "Expense with ID " << id << " deleted successfully." << std::endl;
+                                        } else {
+                                            std::cout << "Failed to delete expense. It might not exist." << std::endl;
+                                        }
+                                    }
+                                    break;
+                                case 4:
+                                    {
+                                        int id;
+                                        std::string item, category;
+                                        double price;
+
+                                        std::cout << "Enter the ID of the expense to edit: ";
+                                        id = getIntegerInput();
+                                        std::cout << "Enter new item name: ";
+                                        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                                        std::getline(std::cin, item);
+                                        std::cout << "Enter new price: ";
+                                        price = getDoubleInput();
+                                        std::cout << "Enter new category: ";
+                                        std::cin >> category;
+                                        if (editExpense(id, item, price, category)) {
+                                            std::cout << "Expense updated successfully!" << std::endl;
+                                        } else {
+                                            std::cout << "Failed to update expense. It might not exist." << std::endl;
+                                        }
+                                    }
                                     break;
                                 case 0: break;
                                 default: std::cout << "Invalid choice." << std::endl;
