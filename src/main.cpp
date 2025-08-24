@@ -43,26 +43,6 @@ double getDoubleInput() {
     return value;
 }
 
-// Helper function to select menu items for a meal type
-std::vector<MenuItem> selectMenuItemsForMeal(const std::string& mealTypeName) {
-    std::vector<MenuItem> selectedItems;
-    int itemId = -1;
-    std::cout << "\nEnter menu item IDs for " << mealTypeName << " (enter 0 to finish):\n";
-    while (true) {
-        std::cout << "> ";
-        itemId = getIntegerInput();
-        if (itemId == 0) {
-            break;
-        }
-        // The database foreign key will reject invalid IDs.
-        // A more advanced UI could validate the ID here against the list of all items.
-        MenuItem item;
-        item.id = itemId;
-        selectedItems.push_back(item);
-    }
-    return selectedItems;
-}
-
 int main() {
     sql::Connection* con = getConnection();
         if (con) {
@@ -211,6 +191,7 @@ int main() {
                         std::cout << "1. Add Menu Item" << std::endl;
                         std::cout << "2. View All Menu Items" << std::endl;
                         std::cout << "3. Set Daily Menu" << std::endl;
+                        std::cout << "4. View Daily Menu" << std::endl;
                         std::cout << "0. Back" << std::endl;
                         std::cout << "Enter your choice: ";
                         menuChoice = getIntegerInput();
@@ -244,26 +225,32 @@ int main() {
                                 }
                                 break;
                             }
-                            case 3: {
+                            case 4: {
                                 std::string date;
-                                std::cout << "Enter date for the menu (YYYY-MM-DD): ";
+                                std::cout << "Enter date to view menu (YYYY-MM-DD): ";
                                 std::cin >> date;
 
-                                // Show available items to the user
-                                std::cout << "\n--- Available Menu Items ---" << std::endl;
-                                std::vector<MenuItem> allItems = getAllMenuItems();
-                                for (const auto& item : allItems) {
-                                    std::cout << "ID: " << item.id << " - " << item.name << std::endl;
-                                }
+                                DailyMenu menu = getDailyMenu(date);
 
-                                std::vector<MenuItem> breakfast = selectMenuItemsForMeal("Breakfast");
-                                std::vector<MenuItem> lunch = selectMenuItemsForMeal("Lunch");
-                                std::vector<MenuItem> dinner = selectMenuItemsForMeal("Dinner");
-
-                                if (setDailyMenu(date, breakfast, lunch, dinner)) {
-                                    std::cout << "Successfully set the menu for " << date << "." << std::endl;
+                                if (menu.breakfast.empty() && menu.lunch.empty() && menu.dinner.empty()) {
+                                    std::cout << "No menu has been set for " << date << "." << std::endl;
                                 } else {
-                                    std::cout << "Failed to set the menu. Please check for invalid item IDs." << std::endl;
+                                    std::cout << "\n--- Menu for " << date << " ---" << std::endl;
+
+                                    auto printMeal = [](const std::string& mealName, const std::vector<MenuItem>& items) {
+                                        std::cout << "\n" << mealName << ":" << std::endl;
+                                        if (items.empty()) {
+                                            std::cout << "  (No items set)" << std::endl;
+                                        } else {
+                                            for (const auto& item : items) {
+                                                std::cout << "  - " << item.name << std::endl;
+                                            }
+                                        }
+                                    };
+
+                                    printMeal("Breakfast", menu.breakfast);
+                                    printMeal("Lunch", menu.lunch);
+                                    printMeal("Dinner", menu.dinner);
                                 }
                                 break;
                             }
@@ -378,8 +365,71 @@ int main() {
                     }
                     break;
                 case 5:
-                    std::cout << "[Stub] Meal Consumption Tracking" << std::endl;
-                    // TODO: Call attendance functions
+                    {
+                        int attendanceChoice = -1;
+                        while (attendanceChoice != 0) {
+                            std::cout << "\n--- Meal Consumption Tracking ---" << std::endl;
+                            std::cout << "1. Record Meal Attendance" << std::endl;
+                            std::cout << "2. View Attendance for a Date" << std::endl;
+                            std::cout << "0. Back" << std::endl;
+                            std::cout << "Enter your choice: ";
+                            attendanceChoice = getIntegerInput();
+
+                            switch (attendanceChoice) {
+                                case 1: {
+                                    std::string date, mealType;
+                                    int userId;
+                                    std::cout << "Enter date (YYYY-MM-DD): ";
+                                    std::cin >> date;
+                                    std::cout << "Enter user ID: ";
+                                    userId = getIntegerInput();
+                                    std::cout << "Enter meal type (Breakfast, Lunch, Dinner): ";
+                                    std::cin >> mealType;
+
+                                    if (recordAttendance(userId, date, mealType)) {
+                                        std::cout << "Attendance recorded successfully." << std::endl;
+                                    } else {
+                                        std::cout << "Failed to record attendance." << std::endl;
+                                    }
+                                    break;
+                                }
+                                case 2: {
+                                    std::string date;
+                                    std::cout << "Enter date to view attendance (YYYY-MM-DD): ";
+                                    std::cin >> date;
+
+                                    std::vector<MealAttendance> attendanceList = getAttendanceForDate(date);
+
+                                    if (attendanceList.empty()) {
+                                        std::cout << "No attendance records found for " << date << "." << std::endl;
+                                    } else {
+                                        std::cout << "\n--- Attendance for " << date << " ---" << std::endl;
+
+                                        auto printAttendeesForMeal = [&](const std::string& mealType) {
+                                            std::cout << "\n" << mealType << ":" << std::endl;
+                                            bool found = false;
+                                            for (const auto& att : attendanceList) {
+                                                if (att.meal_type == mealType) {
+                                                    std::cout << "  - " << att.user_name << " (ID: " << att.user_id << ")" << std::endl;
+                                                    found = true;
+                                                }
+                                            }
+                                            if (!found) {
+                                                std::cout << "  (No one attended)" << std::endl;
+                                            }
+                                        };
+
+                                        printAttendeesForMeal("Breakfast");
+                                        printAttendeesForMeal("Lunch");
+                                        printAttendeesForMeal("Dinner");
+                                    }
+                                    break;
+                                }
+                                case 0: break;
+                                default: std::cout << "Invalid choice or feature not yet implemented." << std::endl;
+                            }
+                        }
+                    }
                     break;
                 case 6:
                     std::cout << "[Stub] Information Editing & Settings" << std::endl;

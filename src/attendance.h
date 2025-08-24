@@ -3,15 +3,15 @@
 
 #include <string>
 #include <vector>
+#include "user.h" // For User struct
 
 struct MealAttendance {
     int user_id;
-    std::string date;
-    std::string meal_type; // Breakfast, Lunch, Dinner
+    std::string user_name;
+    std::string meal_type;
 };
 
 bool recordAttendance(int user_id, const std::string& date, const std::string& meal_type);
-std::vector<MealAttendance> getAttendanceByDate(const std::string& date);
-std::vector<MealAttendance> getAttendanceByUser(int user_id);
+std::vector<MealAttendance> getAttendanceForDate(const std::string& date);
 
 #endif // ATTENDANCE_H

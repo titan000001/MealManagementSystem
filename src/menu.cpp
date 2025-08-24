@@ -97,7 +97,38 @@ bool setDailyMenu(const std::string& date, const std::vector<MenuItem>& breakfas
 }
 
 DailyMenu getDailyMenu(const std::string& date) {
-    return {};
+    DailyMenu dailyMenu;
+    dailyMenu.date = date; // Set the date for the returned struct
+
+    try {
+        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            con->prepareStatement(
+                "SELECT dm.meal_type, mi.id, mi.name "
+                "FROM daily_menus dm "
+                "JOIN menu_items mi ON dm.menu_item_id = mi.id "
+                "WHERE dm.menu_date = STR_TO_DATE(?, '%Y-%m-%d') "
+                "ORDER BY dm.meal_type"
+            )
+        );
+        pstmt->setString(1, date);
+
+        std::unique_ptr<sql::ResultSet> res(pstmt->executeQuery());
+
+        while (res->next()) {
+            MenuItem item;
+            item.id = res->getInt("id");
+            item.name = res->getString("name");
+            std::string mealType = res->getString("meal_type");
+
+            if (mealType == "Breakfast")      dailyMenu.breakfast.push_back(item);
+            else if (mealType == "Lunch")     dailyMenu.lunch.push_back(item);
+            else if (mealType == "Dinner")    dailyMenu.dinner.push_back(item);
+        }
+    } catch (sql::SQLException& e) {
+        std::cerr << "SQL Error in getDailyMenu: " << e.what() << std::endl;
+    }
+    return dailyMenu;
 }
 std::vector<DailyMenu> getMenuHistory() {
     return {};

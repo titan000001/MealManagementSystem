@@ -12,6 +12,7 @@
                 "src/period.cpp",
                 "src/expense.cpp",
                 "src/menu.cpp",
+                "src/attendance.cpp",
                 "-o",
                 "MealManagementSystem",
                 "-lmysqlcppconn",
