@@ -7,7 +7,5 @@
 #include <cppconn/statement.h>
 #include <cppconn/connection.h>
 
-void connectToDatabase();
 sql::Connection* getConnection();
-void closeConnection(sql::Connection* con);
 std::string hashPassword(const std::string& password);

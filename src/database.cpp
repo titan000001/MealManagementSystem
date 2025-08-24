@@ -2,49 +2,52 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <openssl/sha.h>
-#include <mysql_driver.h>
-
-sql::Driver* driver;
-sql::Connection* con;
-
-void connectToDatabase() {
-    try {
-        driver = sql::mysql::get_driver_instance(); // Remove sql::mysql::
-        driver = sql::mysql::get_driver_instance(); // Remove sql::mysql::
-        driver = get_driver_instance();
-    // TODO: Replace "your_mysql_password" with your actual MySQL password
-    con = driver->connect("tcp://127.0.0.1:3306", "root", "newpassword");
-        con->setSchema("meal_management");
-        std::cout << "Successfully connected to the database." << std::endl;
-    } catch (sql::SQLException &e) {
-        std::cerr << "Could not connect to the database. Error: " << e.what() << std::endl;
-        exit(1);
-    }
-}
+#include <openssl/evp.h> // Use modern EVP API for hashing
+#include <memory> // For std::unique_ptr
+#include <mysql_driver.h> // Include for sql::mysql::get_driver_instance()
 
 sql::Connection* getConnection() {
-    if (!con || con->isClosed()) {
-        connectToDatabase();
+    // Use a static unique_ptr to manage the connection's lifetime.
+    // This avoids global variables and ensures the connection is cleaned up on exit.
+    static std::unique_ptr<sql::Connection> con = nullptr;
+    try {
+        if (!con || con->isClosed()) {
+            sql::Driver* driver = sql::mysql::get_driver_instance();
+            // TODO: Replace "newpassword" with your actual MySQL password, preferably from a config file
+            // The .reset() method will delete the old connection before creating a new one, fixing the leak.
+            con.reset(driver->connect("tcp://127.0.0.1:3306", "root", "newpassword"));
+            con->setSchema("meal_management");
+            std::cout << "Successfully connected/reconnected to the database." << std::endl;
+        }
+    } catch (sql::SQLException &e) {
+        std::cerr << "Could not connect to the database. Error: " << e.what() << std::endl;
+        // For this console app, exiting is a simple way to handle a fatal error.
+        exit(1);
     }
-    return con;
-}
-
-void closeConnection(sql::Connection* con) {
-    if (con) {
-        delete con;
-        con = nullptr;
-    }
+    return con.get();
 }
 
 std::string hashPassword(const std::string& password) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, password.c_str(), password.size());
-    SHA256_Final(hash, &sha256);
+    // Modern OpenSSL 3.0+ approach using the EVP API
+    EVP_MD_CTX* mdctx;
+    const EVP_MD* md;
+    unsigned char hash[EVP_MAX_MD_SIZE];
+    unsigned int md_len;
+
+    md = EVP_get_digestbyname("SHA256");
+    if (md == NULL) {
+        std::cerr << "Error: SHA256 digest not found." << std::endl;
+        return "";
+    }
+
+    mdctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex(mdctx, md, NULL);
+    EVP_DigestUpdate(mdctx, password.c_str(), password.size());
+    EVP_DigestFinal_ex(mdctx, hash, &md_len);
+    EVP_MD_CTX_free(mdctx);
+
     std::stringstream ss;
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+    for (unsigned int i = 0; i < md_len; i++) {
         ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
     }
     return ss.str();

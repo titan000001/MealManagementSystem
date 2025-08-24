@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "g++ -I/usr/include/mysql-cppconn-8/ -c /home/titan/Documents/MealManagementSystem/src/database.cpp"
+                "/usr/include/mysql-cppconn-8/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

@@ -13,6 +13,21 @@
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
+#include <memory>
+#include <limits>
+
+// Helper function for robust integer input to prevent crashes on non-numeric input.
+int getIntegerInput() {
+    int value;
+    std::cin >> value;
+    while (std::cin.fail()) {
+        std::cout << "Invalid input. Please enter a whole number: ";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin >> value;
+    }
+    return value;
+}
 
 int main() {
     sql::Connection* con = getConnection();
@@ -36,7 +51,7 @@ int main() {
             std::cout << "0. Exit" << std::endl;
             std::cout << "============================================" << std::endl;
             std::cout << "Enter your choice: ";
-            std::cin >> choice;
+            choice = getIntegerInput();
 
             switch (choice) {
                 case 1: {
@@ -62,15 +77,18 @@ int main() {
                         std::cout << "4. Update Profile" << std::endl;
                         std::cout << "0. Back" << std::endl;
                         std::cout << "Enter your choice: ";
-                        std::cin >> userChoice;
+                        userChoice = getIntegerInput();
                         switch (userChoice) {
                             case 1: {
                                 std::string username, password, name;
                                 int roleInt;
                                 std::cout << "Enter username: "; std::cin >> username;
                                 std::cout << "Enter password: "; std::cin >> password;
-                                std::cout << "Enter name: "; std::cin >> name;
-                                std::cout << "Select role (0: Student, 1: Staff, 2: Admin): "; std::cin >> roleInt;
+                                std::cout << "Enter full name: ";
+                                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Consume the leftover newline
+                                std::getline(std::cin, name);
+                                std::cout << "Select role (0: Student, 1: Staff, 2: Admin): ";
+                                roleInt = getIntegerInput();
                                 UserRole role = static_cast<UserRole>(roleInt);
                                 if (registerUser(username, password, name, role)) {
                                     std::cout << "User registered successfully!" << std::endl;
@@ -83,9 +101,10 @@ int main() {
                                 std::string username, password;
                                 std::cout << "Enter username: "; std::cin >> username;
                                 std::cout << "Enter password: "; std::cin >> password;
-                                User* user = loginUser(username, password);
+                                auto user = loginUser(username, password);
                                 if (user) {
                                     std::cout << "Login successful! Welcome, " << user->name << std::endl;
+                                    // Memory is now managed automatically by unique_ptr
                                 } else {
                                     std::cout << "Login failed. Invalid credentials." << std::endl;
                                 }
@@ -94,12 +113,13 @@ int main() {
                             case 3: {
                                 int id;
                                 std::cout << "Enter user ID: "; std::cin >> id;
-                                User* user = getUserById(id);
+                                auto user = getUserById(id);
                                 if (user) {
                                     std::cout << "User Profile:" << std::endl;
                                     std::cout << "Username: " << user->username << std::endl;
                                     std::cout << "Name: " << user->name << std::endl;
                                     std::cout << "Role: " << static_cast<int>(user->role) << std::endl;
+                                    // Memory is now managed automatically by unique_ptr
                                 } else {
                                     std::cout << "User not found." << std::endl;
                                 }
@@ -108,8 +128,10 @@ int main() {
                             case 4: {
                                 int id;
                                 std::string newName;
-                                std::cout << "Enter user ID: "; std::cin >> id;
-                                std::cout << "Enter new name: "; std::cin >> newName;
+                                std::cout << "Enter user ID: "; id = getIntegerInput();
+                                std::cout << "Enter new full name: ";
+                                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Consume the leftover newline
+                                std::getline(std::cin, newName);
                                 if (updateUserProfile(id, newName)) {
                                     std::cout << "Profile updated successfully!" << std::endl;
                                 } else {
@@ -131,8 +153,32 @@ int main() {
                     // TODO: Call menu management functions
                     break;
                 case 4:
-                    std::cout << "[Stub] Expense Tracking" << std::endl;
-                    // TODO: Call expense tracking functions
+                    {
+                        int expenseChoice = -1;
+                        while (expenseChoice != 0) {
+                            std::cout << "\n--- Expense Tracking ---" << std::endl;
+                            std::cout << "1. Add Expense" << std::endl;
+                            std::cout << "2. View All Expenses" << std::endl;
+                            std::cout << "3. Delete Expense" << std::endl;
+                            std::cout << "0. Back" << std::endl;
+                            std::cout << "Enter your choice: ";
+                            expenseChoice = getIntegerInput();
+
+                            switch (expenseChoice) {
+                                case 1:
+                                    std::cout << "[Stub] Call addExpense function" << std::endl;
+                                    break;
+                                case 2:
+                                    std::cout << "[Stub] Call getAllExpenses function" << std::endl;
+                                    break;
+                                case 3:
+                                    std::cout << "[Stub] Call deleteExpense function" << std::endl;
+                                    break;
+                                case 0: break;
+                                default: std::cout << "Invalid choice." << std::endl;
+                            }
+                        }
+                    }
                     break;
                 case 5:
                     std::cout << "[Stub] Meal Consumption Tracking" << std::endl;
@@ -154,6 +200,5 @@ int main() {
             }
         }
 
-        closeConnection(con);
         return 0;
 }

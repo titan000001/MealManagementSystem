@@ -8,6 +8,8 @@
             "args": [
                 "src/main.cpp",
                 "src/database.cpp",
+                "src/user.cpp",
+                "src/period.cpp",
                 "-o",
                 "MealManagementSystem",
                 "-lmysqlcppconn",

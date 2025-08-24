@@ -2,6 +2,7 @@
 #define USER_H
 
 #include <string>
+#include <memory>
 #include <vector>
 
 enum class UserRole { Student, Staff, Admin };
@@ -18,9 +19,9 @@ struct User {
 };
 
 bool registerUser(const std::string& username, const std::string& password, const std::string& name, UserRole role);
-User* loginUser(const std::string& username, const std::string& password);
+std::unique_ptr<User> loginUser(const std::string& username, const std::string& password);
 std::vector<User> getAllUsers();
-User* getUserById(int id);
+std::unique_ptr<User> getUserById(int id);
 bool updateUserProfile(int id, const std::string& name);
 
 #endif // USER_H
