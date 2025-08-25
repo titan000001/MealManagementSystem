@@ -4,21 +4,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "g++",
-            "args": [
-                "src/main.cpp",
-                "src/database.cpp",
-                "src/user.cpp",
-                "src/period.cpp",
-                "src/expense.cpp",
-                "src/menu.cpp",
-                "src/attendance.cpp",
-                "-o",
-                "MealManagementSystem",
-                "-lmysqlcppconn",
-                "-lssl",
-                "-lcrypto"
-            ],
+             "command": "make",
             "group": {
                 "kind": "build",
                 "isDefault": true

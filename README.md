@@ -74,7 +74,7 @@ Enter your choice: 7
 *   **Database:** MySQL
 *   **Database Connector:** MySQL Connector/C++
 *   **Cryptography:** OpenSSL (for SHA-256 hashing and salt generation)
-*   **Build System:** g++ / Make (or CMake)
+*   **Build System:** Make
 
 ## Getting Started on Linux (Debian/Ubuntu) 🚀
 
@@ -82,13 +82,13 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 ### 1. Prerequisites
 
-You will need a C++ compiler, MySQL, and the necessary development libraries.
+You will need a C++ compiler, Make, MySQL, and the necessary development libraries.
 
 ```bash
 # Update package lists
 sudo apt update
 
-# Install essential build tools and a C++ compiler
+# Install essential build tools (includes make and g++)
 sudo apt install build-essential
 
 # Install MySQL Server
@@ -128,46 +128,40 @@ First, secure your MySQL installation and create a dedicated user and database f
     ```
 
 3.  **Create Tables**:
-    Use the provided schema file to create all the necessary tables in your new database.
+    From your project's root directory, use the provided schema file to create all the necessary tables.
 
     ```bash
-    mysql -u meal_user -p meal_management < database/schema.sql
+    mysql -u meal_user -p meal_management < schema.sql
     ```
     Enter the password you created for `meal_user` when prompted.
 
 ### 3. Application Configuration
 
-The application needs to know how to connect to your database. Open the `src/database.cpp` file and update the connection details.
+The application needs to know how to connect to your database. Open the `src/database.cpp` file and update the connection details with the password you set in the previous step.
 
 ```cpp
 // src/database.cpp
 
 // ...
-// IMPORTANT: Replace these hardcoded values with your actual credentials.
-// For better security, use a configuration file or environment variables instead of hardcoding.
-con.reset(driver->connect("tcp://127.0.0.1:3306", "meal_user", "your_password"));
+// IMPORTANT: Replace "newpassword" with the actual password you created.
+con.reset(driver->connect("tcp://127.0.0.1:3306", "meal_user", "newpassword"));
 con->setSchema("meal_management");
 // ...
 ```
 
 ### 4. Build and Run
 
-1.  **Navigate to the `src` directory**:
-    ```bash
-    cd src
-    ```
+1.  **Navigate to the project's root directory**.
 
 2.  **Compile the project**:
-    Use the following `g++` command to compile all source files and link the required libraries.
-
+    Use the provided `Makefile` for an efficient build. It will only recompile files that have changed.
     ```bash
-    g++ -std=c++17 -o meal_system main.cpp user.cpp database.cpp menu.cpp expense.cpp attendance.cpp period.cpp finance.cpp settings.cpp -lmysqlcppconn -lssl -lcrypto
+    make
     ```
-    This creates an executable file named `meal_system`.
 
 3.  **Run the application**:
     ```bash
-    ./meal_system
+    ./MealManagementSystem
     ```
 
 You should now see the welcome menu for the Meal Management System!
@@ -175,19 +169,9 @@ You should now see the welcome menu for the Meal Management System!
 ## Project Structure 📂
 ```
 .
-├── database/
-│   └── schema.sql        # The complete SQL schema for setting up the database.
-├── src/
-│   ├── main.cpp          # Main application entry point and UI loop.
-│   ├── database.cpp      # Handles database connection and password hashing.
-│   ├── user.cpp          # Logic for user registration, login, and profile management.
-│   ├── menu.cpp          # Logic for managing menu items and daily menus.
-│   ├── expense.cpp       # Logic for tracking shopping expenses.
-│   ├── attendance.cpp    # Logic for recording meal attendance.
-│   ├── finance.cpp       # Core logic for payments and financial settlement reports.
-│   ├── period.cpp        # Logic for managing monthly meal periods.
-│   └── settings.cpp      # Logic for system-wide settings.
-│   └── *.h               # Header files for all modules.
+├── src/                  # All C++ source and header files
+├── Makefile              # The build script for compiling the project
+├── schema.sql            # The complete SQL schema for setting up the database
 └── README.md             # You are here!
 ```
 
@@ -202,4 +186,3 @@ This project was developed as a comprehensive exercise in C++ application develo
 ## License 📄
 
 This project is open source and available under the MIT License.
-

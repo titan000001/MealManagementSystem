@@ -22,7 +22,7 @@
 bool isValidDate(const std::string& date) {
     const std::regex pattern("^(\\d{4})-(\\d{2})-(\\d{2})$");
     std::smatch matches;
-    if (!std::regex_match(date, pattern, matches)) {
+    if (!std::regex_match(date, matches, pattern)) {
         return false;
     }
 
@@ -583,7 +583,7 @@ void handleExpenseManagement(const User& currentUser) {
 }
 
 void handleAttendanceManagement(const User& currentUser) {
-    if (currentUser.role != UserRole::Admin && currentUser.role != UserRle::Staff) {
+    if (currentUser.role != UserRole::Admin && currentUser.role != UserRole::Staff) {
         std::cout << "Access Denied. You must be an Admin or Staff." << std::endl;
         return;
     }

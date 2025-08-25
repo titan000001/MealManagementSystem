@@ -16,7 +16,7 @@ sql::Connection* getConnection() {
             sql::Driver* driver = sql::mysql::get_driver_instance();
             // IMPORTANT: Replace these hardcoded values with your actual credentials.
             // For better security, use a configuration file or environment variables instead of hardcoding.
-            con.reset(driver->connect("tcp://127.0.0.1:3306", "meal_user", "your_password"));
+            con.reset(driver->connect("tcp://127.0.0.1:3306", "meal_user", "newpassword"));
             con->setSchema("meal_management");
             std::cout << "Successfully connected/reconnected to the database." << std::endl;
         }
