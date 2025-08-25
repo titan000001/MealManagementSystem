@@ -7,18 +7,26 @@
  
 bool registerUser(const std::string& username, const std::string& password, const std::string& name, UserRole role) {
     try {
+        std::string salt = generateSalt();
+        std::string password_hash = hashPassword(password, salt);
+
         sql::Connection* con = getConnection();
         std::unique_ptr<sql::PreparedStatement> pstmt(
-            con->prepareStatement("INSERT INTO users (username, password_hash, name, role) VALUES (?, ?, ?, ?)")
+            con->prepareStatement("INSERT INTO users (username, password_hash, salt, name, role) VALUES (?, ?, ?, ?, ?)")
         );
         pstmt->setString(1, username);
-        pstmt->setString(2, hashPassword(password));
-        pstmt->setString(3, name);
-        pstmt->setInt(4, static_cast<int>(role));
+        pstmt->setString(2, password_hash);
+        pstmt->setString(3, salt);
+        pstmt->setString(4, name);
+        pstmt->setInt(5, static_cast<int>(role));
         pstmt->execute();
         return true;
     } catch (sql::SQLException& e) {
-        std::cerr << "SQL Error: " << e.what() << std::endl;
+        if (e.getErrorCode() == 1062) { // ER_DUP_ENTRY
+            std::cerr << "Error: Username '" << username << "' already exists." << std::endl;
+        } else {
+            std::cerr << "SQL Error in registerUser: " << e.what() << std::endl;
+        }
         return false;
     }
 }
@@ -27,7 +35,7 @@ std::unique_ptr<User> loginUser(const std::string& username, const std::string& 
     try {
         sql::Connection* con = getConnection();
         std::unique_ptr<sql::PreparedStatement> pstmt(
-            con->prepareStatement("SELECT id, username, password_hash, name, role FROM users WHERE username = ?")
+            con->prepareStatement("SELECT id, username, password_hash, salt, name, role FROM users WHERE username = ?")
         );
         pstmt->setString(1, username);
 
@@ -35,11 +43,13 @@ std::unique_ptr<User> loginUser(const std::string& username, const std::string& 
 
         if (res->next()) {
             std::string db_password_hash = res->getString("password_hash");
-            if (db_password_hash == hashPassword(password)) {
+            std::string db_salt = res->getString("salt");
+            if (db_password_hash == hashPassword(password, db_salt)) {
                 auto user = std::make_unique<User>();
                 user->id = res->getInt("id");
                 user->username = res->getString("username");
                 user->password_hash = db_password_hash;
+                user->salt = db_salt;
                 user->name = res->getString("name");
                 user->role = static_cast<UserRole>(res->getInt("role"));
                 return user;
@@ -76,7 +86,7 @@ std::unique_ptr<User> getUserById(int id) {
     try {
         sql::Connection* con = getConnection();
         std::unique_ptr<sql::PreparedStatement> pstmt(
-            con->prepareStatement("SELECT id, username, password_hash, name, role FROM users WHERE id = ?")
+            con->prepareStatement("SELECT id, username, password_hash, salt, name, role FROM users WHERE id = ?")
         );
         pstmt->setInt(1, id);
 
@@ -87,6 +97,7 @@ std::unique_ptr<User> getUserById(int id) {
             user->id = res->getInt("id");
             user->username = res->getString("username");
             user->password_hash = res->getString("password_hash");
+            user->salt = res->getString("salt");
             user->name = res->getString("name");
             user->role = static_cast<UserRole>(res->getInt("role"));
             return user;

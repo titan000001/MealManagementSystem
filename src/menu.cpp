@@ -27,8 +27,34 @@ bool addMenuItem(const std::string& name) {
 }
 
 // Stubs for other functions to be implemented later
-bool editMenuItem(int id, const std::string& name) { return false; }
-bool deleteMenuItem(int id) { return false; }
+bool editMenuItem(int id, const std::string& name) { 
+    try {
+        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            con->prepareStatement("UPDATE menu_items SET name = ? WHERE id = ?")
+        );
+        pstmt->setString(1, name);
+        pstmt->setInt(2, id);
+        return pstmt->executeUpdate() > 0;
+    } catch (sql::SQLException& e) {
+        std::cerr << "SQL Error in editMenuItem: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool deleteMenuItem(int id) { 
+    try {
+        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            con->prepareStatement("DELETE FROM menu_items WHERE id = ?")
+        );
+        pstmt->setInt(1, id);
+        return pstmt->executeUpdate() > 0;
+    } catch (sql::SQLException& e) {
+        std::cerr << "SQL Error in deleteMenuItem: " << e.what() << std::endl;
+        return false;
+    }
+}
 std::vector<MenuItem> getAllMenuItems() {
     std::vector<MenuItem> items;
     try {
@@ -128,5 +154,44 @@ DailyMenu getDailyMenu(const std::string& date) {
     return dailyMenu;
 }
 std::vector<DailyMenu> getMenuHistory() {
-    return {};
+    std::vector<DailyMenu> menuHistory;
+    try {
+        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Statement> stmt(con->createStatement());
+        std::unique_ptr<sql::ResultSet> res(stmt->executeQuery(
+            "SELECT DATE_FORMAT(dm.menu_date, '%Y-%m-%d') AS menu_date, dm.meal_type, mi.id, mi.name "
+            "FROM daily_menus dm "
+            "JOIN menu_items mi ON dm.menu_item_id = mi.id "
+            "ORDER BY dm.menu_date DESC, dm.meal_type"
+        ));
+
+        std::map<std::string, DailyMenu> menuMap;
+        while (res->next()) {
+            std::string date = res->getString("menu_date");
+            if (menuMap.find(date) == menuMap.end()) {
+                menuMap[date].date = date;
+            }
+
+            MenuItem item;
+            item.id = res->getInt("id");
+            item.name = res->getString("name");
+            std::string mealType = res->getString("meal_type");
+
+            if (mealType == "Breakfast") {
+                menuMap[date].breakfast.push_back(item);
+            } else if (mealType == "Lunch") {
+                menuMap[date].lunch.push_back(item);
+            } else if (mealType == "Dinner") {
+                menuMap[date].dinner.push_back(item);
+            }
+        }
+
+        for (auto const& [date, menu] : menuMap) {
+            menuHistory.push_back(menu);
+        }
+
+    } catch (sql::SQLException& e) {
+        std::cerr << "SQL Error in getMenuHistory: " << e.what() << std::endl;
+    }
+    return menuHistory;
 }

@@ -86,5 +86,32 @@ std::vector<Expense> getAllExpenses() {
     return expenses;
 }
 std::vector<Expense> getExpensesByCategory(const std::string& category) {
-    return {};
+    std::vector<Expense> expenses;
+    try {
+        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::PreparedStatement> pstmt(
+            con->prepareStatement(
+                "SELECT e.id, DATE_FORMAT(e.purchase_date, '%Y-%m-%d') AS purchase_date, e.item_name, e.price, e.category, u.name AS paid_by_user_name "
+                "FROM expenses e JOIN users u ON e.paid_by_user_id = u.id "
+                "WHERE e.category = ? "
+                "ORDER BY e.purchase_date DESC, e.id DESC"
+            )
+        );
+        pstmt->setString(1, category);
+        std::unique_ptr<sql::ResultSet> res(pstmt->executeQuery());
+
+        while (res->next()) {
+            Expense expense;
+            expense.id = res->getInt("id");
+            expense.purchase_date = res->getString("purchase_date");
+            expense.item_name = res->getString("item_name");
+            expense.price = res->getDouble("price");
+            expense.paid_by_user_name = res->getString("paid_by_user_name");
+            expense.category = res->getString("category");
+            expenses.push_back(expense);
+        }
+    } catch (sql::SQLException& e) {
+        std::cerr << "SQL Error in getExpensesByCategory: " << e.what() << std::endl;
+    }
+    return expenses;
 }

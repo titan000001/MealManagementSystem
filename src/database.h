@@ -8,4 +8,5 @@
 #include <cppconn/connection.h>
 
 sql::Connection* getConnection();
-std::string hashPassword(const std::string& password);
+std::string generateSalt();
+std::string hashPassword(const std::string& password, const std::string& salt);

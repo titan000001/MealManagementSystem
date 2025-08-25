@@ -11,11 +11,9 @@ struct User {
     int id;
     std::string username;
     std::string password_hash;
+    std::string salt;
     std::string name;
     UserRole role;
-    double total_contributions;
-    double total_expenses;
-    double debt_or_surplus;
 };
 
 bool registerUser(const std::string& username, const std::string& password, const std::string& name, UserRole role);
