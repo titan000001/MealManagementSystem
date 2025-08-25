@@ -16,6 +16,7 @@
 #include <memory>
 #include <limits>
 #include <iomanip>
+#include <sstream>
 
 // Helper function for robust integer input to prevent crashes on non-numeric input.
 int getIntegerInput() {
@@ -133,7 +134,8 @@ int main() {
                                     std::cout << "User Profile:" << std::endl;
                                     std::cout << "Username: " << user->username << std::endl;
                                     std::cout << "Name: " << user->name << std::endl;
-                                    std::cout << "Role: " << static_cast<int>(user->role) << std::endl;
+                                    std::string roleStr = (user->role == UserRole::Admin) ? "Admin" : (user->role == UserRole::Staff) ? "Staff" : "Student";
+                                    std::cout << "Role: " << roleStr << std::endl;
                                     // Memory is now managed automatically by unique_ptr
                                 } else {
                                     std::cout << "User not found." << std::endl;
@@ -222,6 +224,51 @@ int main() {
                                         std::cout << std::left << std::setw(5) << item.id
                                                   << item.name << std::endl;
                                     }
+                                }
+                                break;
+                            }
+                            case 3: {
+                                std::string date;
+                                std::cout << "Enter date for the menu (YYYY-MM-DD): ";
+                                std::cin >> date;
+                                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // FIX: Consume newline here
+
+                                // Helper lambda to get item IDs from user
+                                auto getItemIds = [](const std::string& mealName) {
+                                    std::vector<int> itemIds;
+                                    std::string line;
+                                    std::cout << "Enter menu item IDs for " << mealName << " (space-separated, e.g., 1 3 5): ";
+                                    std::getline(std::cin, line);
+                                    std::stringstream ss(line);
+                                    int id;
+                                    while (ss >> id) {
+                                        itemIds.push_back(id);
+                                    }
+                                    return itemIds;
+                                };
+
+                                // First, show all available menu items so the user knows which IDs to enter.
+                                std::vector<MenuItem> items = getAllMenuItems();
+                                if (items.empty()) {
+                                    std::cout << "No menu items found. Please add some items first." << std::endl;
+                                    break;
+                                }
+                                std::cout << "\n--- Available Menu Items ---" << std::endl;
+                                std::cout << std::left << std::setw(5) << "ID" << "Name" << std::endl;
+                                std::cout << std::string(40, '-') << std::endl;
+                                for (const auto& item : items) {
+                                    std::cout << std::left << std::setw(5) << item.id << item.name << std::endl;
+                                }
+                                std::cout << std::endl;
+
+                                std::vector<int> breakfastItems = getItemIds("Breakfast");
+                                std::vector<int> lunchItems = getItemIds("Lunch");
+                                std::vector<int> dinnerItems = getItemIds("Dinner");
+
+                                if (setDailyMenu(date, breakfastItems, lunchItems, dinnerItems)) {
+                                    std::cout << "Daily menu for " << date << " set successfully." << std::endl;
+                                } else {
+                                    std::cout << "Failed to set daily menu." << std::endl;
                                 }
                                 break;
                             }

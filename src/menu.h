@@ -20,7 +20,7 @@ bool addMenuItem(const std::string& name);
 bool editMenuItem(int id, const std::string& name);
 bool deleteMenuItem(int id);
 std::vector<MenuItem> getAllMenuItems();
-bool setDailyMenu(const std::string& date, const std::vector<MenuItem>& breakfast, const std::vector<MenuItem>& lunch, const std::vector<MenuItem>& dinner);
+bool setDailyMenu(const std::string& date, const std::vector<int>& breakfastItems, const std::vector<int>& lunchItems, const std::vector<int>& dinnerItems);
 DailyMenu getDailyMenu(const std::string& date);
 std::vector<DailyMenu> getMenuHistory();
 

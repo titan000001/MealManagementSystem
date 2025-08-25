@@ -50,48 +50,45 @@ std::vector<MenuItem> getAllMenuItems() {
     return items;
 }
 
-bool setDailyMenu(const std::string& date, const std::vector<MenuItem>& breakfast, const std::vector<MenuItem>& lunch, const std::vector<MenuItem>& dinner) {
+bool setDailyMenu(const std::string& date, const std::vector<int>& breakfastItems, const std::vector<int>& lunchItems, const std::vector<int>& dinnerItems) {
     sql::Connection* con = getConnection();
+    if (!con) {
+        std::cerr << "Failed to get database connection in setDailyMenu." << std::endl;
+        return false;
+    }
     try {
-        // Start a transaction for atomicity
-        con->setAutoCommit(false);
+        con->setAutoCommit(false); // Start transaction
 
-        // First, delete any existing menu for this date to allow for easy updates.
-        std::unique_ptr<sql::PreparedStatement> del_pstmt(
-            con->prepareStatement("DELETE FROM daily_menus WHERE menu_date = STR_TO_DATE(?, '%Y-%m-%d')")
-        );
-        del_pstmt->setString(1, date);
-        del_pstmt->execute();
+        std::unique_ptr<sql::PreparedStatement> pstmt_del(con->prepareStatement("DELETE FROM daily_menus WHERE menu_date = ?"));
+        pstmt_del->setString(1, date);
+        pstmt_del->executeUpdate();
 
-        // Prepare the insert statement once
-        std::unique_ptr<sql::PreparedStatement> ins_pstmt(
-            con->prepareStatement("INSERT INTO daily_menus (menu_date, meal_type, menu_item_id) VALUES (STR_TO_DATE(?, '%Y-%m-%d'), ?, ?)")
-        );
+        std::unique_ptr<sql::PreparedStatement> pstmt_ins(con->prepareStatement("INSERT INTO daily_menus (menu_date, meal_type, menu_item_id) VALUES (?, ?, ?)"));
 
-        // Helper lambda to insert items for a meal type
-        auto insertItems = [&](const std::vector<MenuItem>& items, const std::string& mealType) {
-            for (const auto& item : items) {
-                ins_pstmt->setString(1, date);
-                ins_pstmt->setString(2, mealType);
-                ins_pstmt->setInt(3, item.id);
-                ins_pstmt->execute();
+        auto insertItems = [&](const std::string& mealType, const std::vector<int>& items) {
+            for (int itemId : items) {
+                pstmt_ins->setString(1, date);
+                pstmt_ins->setString(2, mealType);
+                pstmt_ins->setInt(3, itemId);
+                pstmt_ins->executeUpdate();
             }
         };
 
-        insertItems(breakfast, "Breakfast");
-        insertItems(lunch, "Lunch");
-        insertItems(dinner, "Dinner");
+        insertItems("Breakfast", breakfastItems);
+        insertItems("Lunch", lunchItems);
+        insertItems("Dinner", dinnerItems);
 
-        // If all inserts were successful, commit the transaction
         con->commit();
-        con->setAutoCommit(true); // Restore default behavior
+        con->setAutoCommit(true);
         return true;
-
-    } catch (sql::SQLException& e) {
+    } catch (sql::SQLException &e) {
         std::cerr << "SQL Error in setDailyMenu: " << e.what() << std::endl;
-        // An error occurred, roll back the entire transaction
-        con->rollback();
-        con->setAutoCommit(true); // Restore default behavior
+        try {
+            con->rollback();
+        } catch (sql::SQLException &ex) {
+            std::cerr << "SQL Error on rollback: " << ex.what() << std::endl;
+        }
+        con->setAutoCommit(true);
         return false;
     }
 }
