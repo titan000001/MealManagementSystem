@@ -14,9 +14,9 @@ sql::Connection* getConnection() {
     try {
         if (!con || con->isClosed()) {
             sql::Driver* driver = sql::mysql::get_driver_instance();
-            // TODO: Replace "newpassword" with your actual MySQL password, preferably from a config file
-            // The .reset() method will delete the old connection before creating a new one, fixing the leak.
-            con.reset(driver->connect("tcp://127.0.0.1:3306", "root", "newpassword"));
+            // IMPORTANT: Replace these hardcoded values with your actual credentials.
+            // For better security, use a configuration file or environment variables instead of hardcoding.
+            con.reset(driver->connect("tcp://127.0.0.1:3306", "meal_user", "your_password"));
             con->setSchema("meal_management");
             std::cout << "Successfully connected/reconnected to the database." << std::endl;
         }

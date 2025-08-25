@@ -1,53 +1,205 @@
-# Meal Management System
+# Meal Management System 🍲
 
-## Project Overview
+A comprehensive, console-based application built with C++ and MySQL to efficiently manage dining operations for hostels, messes, or shared living spaces. Say goodbye to messy spreadsheets and manual calculations!
 
-This project is a **Meal Management System** designed to streamline operations for dining facilities like hostels, college messes, or shared living arrangements. It aims to efficiently manage users, daily menus, meal attendance, expenses, and financial settlements.
+## Overview
 
-Developed using **C++** for the application logic and user interface, and **MySQL** as the relational database management system, this project focuses on robust data management and a clear, functional user experience.
+Managing a shared dining facility can be chaotic. Tracking who ate what, who bought the groceries, and who owes money at the end of the month often involves confusing ledgers, lost receipts, and complicated calculations. This project was built to solve that exact problem.
 
-## Features (Planned)
+The Meal Management System provides a centralized, secure, and automated solution to track users, daily menus, meal attendance, and expenses. Its core feature is the ability to generate a detailed financial settlement report with a single command, ensuring fairness and transparency for all members.
 
-The following key features are planned for implementation:
+## Key Features ✨
 
-### Core Functionality
+*   **🔐 Secure User & Session Management**
+    *   Secure user registration with industry-standard **salted SHA-256 password hashing**.
+    *   **Role-Based Access Control (RBAC)** with three distinct roles: `Student`, `Staff`, and `Admin`.
+    *   Stateful login system restricting access to sensitive features based on the logged-in user's role.
+    *   Users can easily view and update their own profiles.
 
-* **Monthly Meal Period Setup:**
-    * Define and manage monthly meal periods, setting up the framework for each month's operations.
-* **User Management:**
-    * Secure user registration and login.
-    * Different user roles (e.g., Student, Staff, Admin) with appropriate permissions.
-    * Ability to view and update user profiles.
-* **Menu Management (Admin/Staff):**
-    * Add, edit, and delete individual menu items (e.g., "Rice", "Chicken Curry").
-    * Set daily menus, assigning specific menu items to Breakfast, Lunch, and Dinner for each day.
-    * View historical and upcoming daily menus.
-* **Expense Tracking (Shopping Management):**
-    * Record all shopping expenses, including date, item purchased, price, and who paid for it.
-    * Categorize expenses for better analysis.
-* **Meal Consumption Tracking (Attendance):**
-    * Record user attendance for specific meals on a given date.
-    * Generate daily meal lists showing who consumed how many meals.
-* **Information Editing & Settings:**
-    * Ability to edit any previously entered information (e.g., user details, menu items, expenses).
-    * Manage system-wide settings, including currency.
-* **Financial Analysis & Settlement:**
-    * Calculate monthly bills based on meal consumption and shared expenses.
-    * Analyze individual user's financial status, showing their total contributions, total expenses, and resulting debt or surplus.
-    * Record and track payments made by users.
-    * Generate comprehensive financial reports.
+*   **💸 Financial Management (Admin-only)**
+    *   Record user payments and track individual contributions.
+    *   Generate a complete **monthly settlement report**, automatically calculating the cost-per-meal and each user's final balance (debt or surplus).
+    *   View detailed financial summaries for all users at a glance.
 
-### Technical Aspects
+*   **🛒 Expense & Shopping Tracking (Admin/Staff)**
+    *   Log all purchases with details like date, item, price, category, and the user who paid.
+    *   View, edit, and delete expense records.
+    *   Filter expenses by category for better analysis.
 
-* **Database:** MySQL for structured data storage and retrieval.
-* **Programming Language:** C++ for the application logic.
-* **Database Connectivity:** MySQL Connector/C++ to enable seamless communication between the C++ application and the MySQL database.
-* **User Interface:** Initially a console-based application, with potential for a simple graphical user interface (GUI) later if feasible within the project scope.
-* **Error Handling:** Robust error handling for database operations and user input.
+*   **📅 Menu & Meal Management (Admin/Staff)**
+    *   Manage a central list of all possible menu items.
+    *   Set and view daily menus for breakfast, lunch, and dinner.
+    *   Record meal attendance for each user.
+    *   View historical menus and daily attendance records.
 
+*   **⚙️ System Administration (Admin-only)**
+    *   Set up and manage monthly meal periods.
+    *   Register new users and view a complete list of all members.
+    *   Configure system-wide settings like currency.
 
-## Contributing
+## System in Action 📸
 
-Tamim
-Sumona
+Here's a glimpse of the user-friendly console interface:
+
+```
+--- Welcome to the Meal Management System ---
+1. Login
+2. Register
+0. Exit
+Enter your choice: 1
+
+Enter username: admin
+Enter password: [your_password]
+Login successful! Welcome, Admin User
+
+========== Meal Management System ==========
+Logged in as: Admin User (Admin)
+--------------------------------------------
+1. Monthly Meal Period Management
+2. User Management
+3. Menu Management
+4. Expense Tracking
+5. Meal Consumption Tracking
+6. Information Editing & Settings
+7. Financial Analysis & Settlement
+8. Logout
+0. Exit
+============================================
+Enter your choice: 7
+```
+
+## Tech Stack 🛠️
+
+*   **Backend:** C++ (17)
+*   **Database:** MySQL
+*   **Database Connector:** MySQL Connector/C++
+*   **Cryptography:** OpenSSL (for SHA-256 hashing and salt generation)
+*   **Build System:** g++ / Make (or CMake)
+
+## Getting Started on Linux (Debian/Ubuntu) 🚀
+
+Follow these instructions to get a copy of the project up and running on your local machine.
+
+### 1. Prerequisites
+
+You will need a C++ compiler, MySQL, and the necessary development libraries.
+
+```bash
+# Update package lists
+sudo apt update
+
+# Install essential build tools and a C++ compiler
+sudo apt install build-essential
+
+# Install MySQL Server
+sudo apt install mysql-server
+
+# Install the OpenSSL development library
+sudo apt install libssl-dev
+
+# Install the MySQL C++ Connector development library
+# Note: The package name may vary. It could be libmysqlcppconn-dev
+sudo apt install libmysqlcppconn-dev
+```
+
+### 2. Database Setup
+
+First, secure your MySQL installation and create a dedicated user and database for the application.
+
+1.  **Secure MySQL (Recommended)**:
+    ```bash
+    sudo mysql_secure_installation
+    ```
+    Follow the on-screen prompts to set a root password and configure security settings.
+
+2.  **Create Database and User**:
+    Log in to MySQL as the root user:
+    ```bash
+    sudo mysql -u root -p
+    ```
+    Now, run the following SQL commands. Replace `'your_password'` with a strong password.
+
+    ```sql
+    CREATE DATABASE meal_management;
+    CREATE USER 'meal_user'@'localhost' IDENTIFIED BY 'your_password';
+    GRANT ALL PRIVILEGES ON meal_management.* TO 'meal_user'@'localhost';
+    FLUSH PRIVILEGES;
+    EXIT;
+    ```
+
+3.  **Create Tables**:
+    Use the provided schema file to create all the necessary tables in your new database.
+
+    ```bash
+    mysql -u meal_user -p meal_management < database/schema.sql
+    ```
+    Enter the password you created for `meal_user` when prompted.
+
+### 3. Application Configuration
+
+The application needs to know how to connect to your database. Open the `src/database.cpp` file and update the connection details.
+
+```cpp
+// src/database.cpp
+
+// ...
+// IMPORTANT: Replace these hardcoded values with your actual credentials.
+// For better security, use a configuration file or environment variables instead of hardcoding.
+con.reset(driver->connect("tcp://127.0.0.1:3306", "meal_user", "your_password"));
+con->setSchema("meal_management");
+// ...
+```
+
+### 4. Build and Run
+
+1.  **Navigate to the `src` directory**:
+    ```bash
+    cd src
+    ```
+
+2.  **Compile the project**:
+    Use the following `g++` command to compile all source files and link the required libraries.
+
+    ```bash
+    g++ -std=c++17 -o meal_system main.cpp user.cpp database.cpp menu.cpp expense.cpp attendance.cpp period.cpp finance.cpp settings.cpp -lmysqlcppconn -lssl -lcrypto
+    ```
+    This creates an executable file named `meal_system`.
+
+3.  **Run the application**:
+    ```bash
+    ./meal_system
+    ```
+
+You should now see the welcome menu for the Meal Management System!
+
+## Project Structure 📂
+```
+.
+├── database/
+│   └── schema.sql        # The complete SQL schema for setting up the database.
+├── src/
+│   ├── main.cpp          # Main application entry point and UI loop.
+│   ├── database.cpp      # Handles database connection and password hashing.
+│   ├── user.cpp          # Logic for user registration, login, and profile management.
+│   ├── menu.cpp          # Logic for managing menu items and daily menus.
+│   ├── expense.cpp       # Logic for tracking shopping expenses.
+│   ├── attendance.cpp    # Logic for recording meal attendance.
+│   ├── finance.cpp       # Core logic for payments and financial settlement reports.
+│   ├── period.cpp        # Logic for managing monthly meal periods.
+│   └── settings.cpp      # Logic for system-wide settings.
+│   └── *.h               # Header files for all modules.
+└── README.md             # You are here!
+```
+
+## Authors & Acknowledgements 🙏
+
+*   Titan
+*   Tamim
+*   Sumona
+
+This project was developed as a comprehensive exercise in C++ application development and database management.
+
+## License 📄
+
+This project is open source and available under the MIT License.
 
