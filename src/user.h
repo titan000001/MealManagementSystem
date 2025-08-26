@@ -16,6 +16,8 @@ struct User {
     UserRole role;
 };
 
+std::string roleToString(UserRole role);
+
 bool registerUser(const std::string& username, const std::string& password, const std::string& name, UserRole role);
 std::unique_ptr<User> loginUser(const std::string& username, const std::string& password);
 std::vector<User> getAllUsers();

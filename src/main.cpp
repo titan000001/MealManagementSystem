@@ -85,15 +85,6 @@ double getDoubleInput() {
     return value;
 }
 
-std::string roleToString(UserRole role) {
-    switch (role) {
-        case UserRole::Admin: return "Admin";
-        case UserRole::Staff: return "Staff";
-        case UserRole::Student: return "Student";
-        default: return "Unknown";
-    }
-}
-
 void displayUser(const User& user) {
     std::cout << "ID: " << user.id << std::endl;
     std::cout << "Username: " << user.username << std::endl;
@@ -123,15 +114,29 @@ void handleUserManagement(const User& currentUser) {
                 std::cout << "Enter username: "; std::cin >> username;
                 std::cout << "Enter password: "; std::cin >> password;
                 std::cout << "Enter full name: ";
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Consume the leftover newline
+             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Consume the leftover newline
                 std::getline(std::cin, name);
+
+                UserRole role = UserRole::Student; // Initialize to a safe default.
+                bool roleIsValid = false;
                 std::cout << "Select role (0: Student, 1: Staff, 2: Admin): ";
                 roleInt = getIntegerInput();
-                if (roleInt < 0 || roleInt > 2) {
+                
+                // Use a switch statement for a more robust and explicit mapping from int to UserRole.
+                // This avoids potential issues with static_cast.
+                switch (roleInt) {
+                    case 0: role = UserRole::Student; roleIsValid = true; break;
+                    case 1: role = UserRole::Staff;   roleIsValid = true; break;
+                    case 2: role = UserRole::Admin;   roleIsValid = true; break;
+                    default:
+                        std::cout << "Invalid role selected." << std::endl;
+                        break;
+                }
+
+                if (!roleIsValid) {
                     std::cout << "Invalid role selected." << std::endl;
                     break;
                 }
-                UserRole role = static_cast<UserRole>(roleInt);
                 if (registerUser(username, password, name, role)) {
                     std::cout << "User registered successfully!" << std::endl;
                 } else {
@@ -877,19 +882,14 @@ int main() {
                 }
                 case 2: { // Register
                     std::string username, password, name;
-                    int roleInt;
                     std::cout << "Enter username: "; std::cin >> username;
                     std::cout << "Enter password: "; std::cin >> password;
                     std::cout << "Enter full name: ";
                     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                     std::getline(std::cin, name);
-                    std::cout << "Select role (0: Student, 1: Staff, 2: Admin): ";
-                    roleInt = getIntegerInput();
-                    if (roleInt < 0 || roleInt > 2) {
-                        std::cout << "Invalid role selected." << std::endl;
-                        break;
-                    }
-                    UserRole role = static_cast<UserRole>(roleInt);
+                    // For security, all public registrations default to the Student role.
+                    // Admins can change roles later via the User Management menu.
+                    UserRole role = UserRole::Student;
                     if (registerUser(username, password, name, role)) {
                         std::cout << "User registered successfully! Please login." << std::endl;
                     } else {

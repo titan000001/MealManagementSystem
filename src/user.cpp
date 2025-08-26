@@ -5,6 +5,28 @@
 #include <iostream>
 #include <memory>
  
+std::string roleToString(UserRole role) {
+    switch (role) {
+        case UserRole::Admin:   return "Admin";
+        case UserRole::Staff:   return "Staff";
+        case UserRole::Student: return "Student";
+        default:
+            // This case indicates a programming error where an invalid role is passed.
+            return "INVALID_ROLE"; // Return a string that will be caught as an error.
+    }
+}
+
+static UserRole stringToRole(const std::string& roleStr) {
+    if (roleStr == "Admin") return UserRole::Admin;
+    if (roleStr == "Staff") return UserRole::Staff;
+    if (roleStr != "Student") {
+        // If an unknown role string is found in the database, log it.
+        std::cerr << "Warning: Unknown role '" << roleStr << "' found in database. Defaulting to Student." << std::endl;
+    }
+    // Default to Student for safety. This handles "Student" and any other unexpected values.
+    return UserRole::Student;
+}
+
 bool registerUser(const std::string& username, const std::string& password, const std::string& name, UserRole role) {
     try {
         std::string salt = generateSalt();
@@ -18,7 +40,13 @@ bool registerUser(const std::string& username, const std::string& password, cons
         pstmt->setString(2, password_hash);
         pstmt->setString(3, salt);
         pstmt->setString(4, name);
-        pstmt->setInt(5, static_cast<int>(role));
+        
+        std::string roleStr = roleToString(role);
+        if (roleStr == "INVALID_ROLE") {
+            std::cerr << "Error: Attempted to register user with an invalid role." << std::endl;
+            return false;
+        }
+        pstmt->setString(5, roleStr);
         pstmt->execute();
         return true;
     } catch (sql::SQLException& e) {
@@ -51,7 +79,8 @@ std::unique_ptr<User> loginUser(const std::string& username, const std::string& 
                 user->password_hash = db_password_hash;
                 user->salt = db_salt;
                 user->name = res->getString("name");
-                user->role = static_cast<UserRole>(res->getInt("role"));
+                // Read role as a string and convert to enum for robustness.
+                user->role = stringToRole(res->getString("role"));
                 return user;
             }
         }
@@ -73,7 +102,8 @@ std::vector<User> getAllUsers() {
             user.id = res->getInt("id");
             user.username = res->getString("username");
             user.name = res->getString("name");
-            user.role = static_cast<UserRole>(res->getInt("role"));
+            // Read role as a string and convert to enum for robustness.
+            user.role = stringToRole(res->getString("role"));
             users.push_back(user);
         }
     } catch (sql::SQLException& e) {
@@ -99,7 +129,8 @@ std::unique_ptr<User> getUserById(int id) {
             user->password_hash = res->getString("password_hash");
             user->salt = res->getString("salt");
             user->name = res->getString("name");
-            user->role = static_cast<UserRole>(res->getInt("role"));
+            // Read role as a string and convert to enum for robustness.
+            user->role = stringToRole(res->getString("role"));
             return user;
         }
     } catch (sql::SQLException& e) {
