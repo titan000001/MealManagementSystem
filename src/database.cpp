@@ -7,25 +7,51 @@
 #include <memory> // For std::unique_ptr
 #include <mysql_driver.h> // Include for sql::mysql::get_driver_instance()
 
-sql::Connection* getConnection() {
-    // Use a static unique_ptr to manage the connection's lifetime.
-    // This avoids global variables and ensures the connection is cleaned up on exit.
-    static std::unique_ptr<sql::Connection> con = nullptr;
+#include "database.h"
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <stdexcept>      // For std::runtime_error
+#include <openssl/evp.h> // Use modern EVP API for hashing
+#include <openssl/rand.h> // For salt generation
+#include <memory> // For std::unique_ptr
+#include <mysql_driver.h> // Include for sql::mysql::get_driver_instance()
+#include <QSettings>      // For reading config file
+#include <QFileInfo>      // For checking if config file exists
+
+std::unique_ptr<sql::Connection> getConnection() {
+    const QString configFileName = "config.ini";
+    QFileInfo configFile(configFileName);
+
+    if (!configFile.exists()) {
+        throw std::runtime_error("FATAL: Configuration file 'config.ini' not found. "
+                                 "Please copy 'config.ini.example' to 'config.ini' and fill in your database details.");
+    }
+
+    QSettings settings(configFileName, QSettings::IniFormat);
+
+    std::string host = settings.value("Database/host").toString().toStdString();
+    std::string user = settings.value("Database/user").toString().toStdString();
+    std::string password = settings.value("Database/password").toString().toStdString();
+    std::string schema = settings.value("Database/database").toString().toStdString();
+
+    if (host.empty() || user.empty() || schema.empty()) {
+        throw std::runtime_error("FATAL: One or more required database settings (host, user, database) are missing from 'config.ini'.");
+    }
+     if (password == "your_password") {
+        std::cerr << "WARNING: You are using the default password from 'config.ini.example'. Please change it." << std::endl;
+    }
+
+
     try {
-        if (!con || con->isClosed()) {
-            sql::Driver* driver = sql::mysql::get_driver_instance();
-            // IMPORTANT: Replace these hardcoded values with your actual credentials.
-            // For better security, use a configuration file or environment variables instead of hardcoding.
-            con.reset(driver->connect("tcp://127.0.0.1:3306", "meal_user", "newpassword"));
-            con->setSchema("meal_management");
-            std::cout << "Successfully connected/reconnected to the database." << std::endl;
-        }
+        sql::Driver* driver = sql::mysql::get_driver_instance();
+        std::unique_ptr<sql::Connection> con(driver->connect(host, user, password));
+        con->setSchema(schema);
+        return con;
     } catch (sql::SQLException &e) {
         std::cerr << "Could not connect to the database. Error: " << e.what() << std::endl;
-        // For this console app, exiting is a simple way to handle a fatal error.
-        exit(1);
+        throw; // Re-throw the exception to be handled by the caller
     }
-    return con.get();
 }
 
 std::string generateSalt() {
@@ -42,6 +68,8 @@ std::string generateSalt() {
     return ss.str();
 }
 
+// NOTE: This is a basic hashing implementation. For production systems, you should
+// use a stronger, more resource-intensive key derivation function like Argon2 or scrypt.
 std::string hashPassword(const std::string& password, const std::string& salt) {
     // Modern OpenSSL 3.0+ approach using the EVP API
     EVP_MD_CTX* mdctx;

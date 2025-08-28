@@ -1,4 +1,5 @@
 #include "finance.h"
+#include "period.h"
 #include "database.h"
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
@@ -6,7 +7,7 @@
 
 bool recordPayment(int user_id, double amount, const std::string& date) {
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT INTO payments(user_id, amount, date) VALUES(?, ?, STR_TO_DATE(?, '%Y-%m-%d'))"));
         pstmt->setInt(1, user_id);
         pstmt->setDouble(2, amount);
@@ -22,7 +23,7 @@ bool recordPayment(int user_id, double amount, const std::string& date) {
 std::vector<Payment> getPaymentsByUser(int user_id) {
     std::vector<Payment> payments;
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("SELECT id, amount, date FROM payments WHERE user_id = ?"));
         pstmt->setInt(1, user_id);
         std::unique_ptr<sql::ResultSet> res(pstmt->executeQuery());
@@ -43,7 +44,7 @@ std::vector<Payment> getPaymentsByUser(int user_id) {
 FinancialReport getUserFinancialReport(int user_id) {
     FinancialReport report = {user_id, "", 0.0, 0.0, 0.0};
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement(
             "SELECT u.name, COALESCE(SUM(p.amount), 0) AS total_payments, COALESCE(SUM(e.price), 0) AS total_expenses "
             "FROM users u "
@@ -69,7 +70,7 @@ FinancialReport getUserFinancialReport(int user_id) {
 std::vector<FinancialReport> getAllFinancialReports() {
     std::vector<FinancialReport> reports;
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::Statement> stmt(con->createStatement());
         std::unique_ptr<sql::ResultSet> res(stmt->executeQuery(
             "SELECT u.id, u.name, COALESCE(p.total_payments, 0) AS total_payments, COALESCE(e.total_expenses, 0) AS total_expenses "
@@ -99,7 +100,7 @@ std::pair<double, std::vector<SettlementReport>> generateMonthlySettlement(int p
     std::string month, year;
 
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
 
         // 1. Get the month and year for the selected period
         std::unique_ptr<sql::PreparedStatement> pstmt_period(con->prepareStatement("SELECT month, year FROM meal_periods WHERE id = ?"));
@@ -140,7 +141,7 @@ std::pair<double, std::vector<SettlementReport>> generateMonthlySettlement(int p
         // 5. Get data for all users and calculate their individual reports
         std::unique_ptr<sql::PreparedStatement> pstmt_users(con->prepareStatement(
             "SELECT u.id, u.name, "
-            "COALESCE(att.meal_count, 0) AS total_meals, "
+            "COALESCE(att.meal_.count, 0) AS total_meals, "
             "COALESCE(pay.total_payments, 0) AS total_payments, "
             "COALESCE(exp.total_shopping, 0) AS total_shopping "
             "FROM users u "

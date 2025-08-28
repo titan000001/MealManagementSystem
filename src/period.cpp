@@ -8,7 +8,7 @@
 
 bool setupMealPeriod(const std::string& month, const std::string& year) {
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("INSERT INTO meal_periods (month, year) VALUES (?, ?)"));
         pstmt->setString(1, month);
@@ -28,7 +28,7 @@ bool setupMealPeriod(const std::string& month, const std::string& year) {
 std::vector<MealPeriod> getAllMealPeriods() {
     std::vector<MealPeriod> periods;
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::Statement> stmt(con->createStatement());
         std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT id, month, year FROM meal_periods ORDER BY year DESC, month DESC"));
         while (res->next()) {

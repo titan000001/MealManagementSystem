@@ -1,12 +1,12 @@
 # Meal Management System 🍲
 
-A comprehensive, console-based application built with C++ and MySQL to efficiently manage dining operations for hostels, messes, or shared living spaces. Say goodbye to messy spreadsheets and manual calculations!
+A comprehensive desktop GUI application built with C++ and Qt to efficiently manage dining operations for hostels, messes, or shared living spaces. Say goodbye to messy spreadsheets and manual calculations!
 
 ## Overview
 
 Managing a shared dining facility can be chaotic. Tracking who ate what, who bought the groceries, and who owes money at the end of the month often involves confusing ledgers, lost receipts, and complicated calculations. This project was built to solve that exact problem.
 
-The Meal Management System provides a centralized, secure, and automated solution to track users, daily menus, meal attendance, and expenses. Its core feature is the ability to generate a detailed financial settlement report with a single command, ensuring fairness and transparency for all members.
+The Meal Management System provides a centralized, secure, and user-friendly desktop application to track users, daily menus, meal attendance, and expenses. Its core feature is the ability to generate a detailed financial settlement report with a single click, ensuring fairness and transparency for all members.
 
 ## Key Features ✨
 
@@ -36,45 +36,15 @@ The Meal Management System provides a centralized, secure, and automated solutio
     *   Set up and manage monthly meal periods.
     *   Register new users and view a complete list of all members.
     *   Configure system-wide settings like currency.
-
-## System in Action 📸
-
-Here's a glimpse of the user-friendly console interface:
-
-```
---- Welcome to the Meal Management System ---
-1. Login
-2. Register
-0. Exit
-Enter your choice: 1
-
-Enter username: admin
-Enter password: [your_password]
-Login successful! Welcome, Admin User
-
-========== Meal Management System ==========
-Logged in as: Admin User (Admin)
---------------------------------------------
-1. Monthly Meal Period Management
-2. User Management
-3. Menu Management
-4. Expense Tracking
-5. Meal Consumption Tracking
-6. Information Editing & Settings
-7. Financial Analysis & Settlement
-8. Logout
-0. Exit
-============================================
-Enter your choice: 7
-```
-
+/
 ## Tech Stack 🛠️
 
-*   **Backend:** C++ (17)
+*   **Backend & Core Logic:** C++ (17)
+*   **GUI Framework:** Qt6
 *   **Database:** MySQL
 *   **Database Connector:** MySQL Connector/C++
 *   **Cryptography:** OpenSSL (for SHA-256 hashing and salt generation)
-*   **Build System:** Make
+*   **Build System:** CMake
 
 ## Getting Started on Linux (Debian/Ubuntu) 🚀
 
@@ -82,14 +52,17 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 ### 1. Prerequisites
 
-You will need a C++ compiler, Make, MySQL, and the necessary development libraries.
+You will need a C++ compiler, CMake, MySQL, and the necessary development libraries for Qt6, OpenSSL, and MySQL.
 
 ```bash
 # Update package lists
 sudo apt update
 
-# Install essential build tools (includes make and g++)
-sudo apt install build-essential
+# Install essential build tools (includes g++, make, and cmake)
+sudo apt install build-essential cmake
+
+# Install Qt6 development tools
+sudo apt install qt6-base-dev
 
 # Install MySQL Server
 sudo apt install mysql-server
@@ -137,40 +110,58 @@ First, secure your MySQL installation and create a dedicated user and database f
 
 ### 3. Application Configuration
 
-The application needs to know how to connect to your database. Open the `src/database.cpp` file and update the connection details with the password you set in the previous step.
+The application connects to the database using the details specified in a `config.ini` file. You must create this file before running the application.
 
-```cpp
-// src/database.cpp
+1.  **Copy the Example File**:
+    In the project's root directory, make a copy of the example configuration file and name it `config.ini`.
+    ```bash
+    cp config.ini.example config.ini
+    ```
 
-// ...
-// IMPORTANT: Replace "newpassword" with the actual password you created.
-con.reset(driver->connect("tcp://127.0.0.1:3306", "meal_user", "newpassword"));
-con->setSchema("meal_management");
-// ...
-```
+2.  **Edit the Configuration**:
+    Open the new `config.ini` file in a text editor. It will look like this:
+    ```ini
+    [Database]
+    host=tcp://127.0.0.1:3306
+    user=meal_user
+    password=your_password
+    database=meal_management
+    ```
+    Replace `your_password` with the actual password you created for the `meal_user` during the database setup.
 
 ### 4. Build and Run
 
 1.  **Navigate to the project's root directory**.
 
-2.  **Compile the project**:
-    Use the provided `Makefile` for an efficient build. It will only recompile files that have changed.
+2.  **Create a build directory**:
+    ```bash
+    mkdir build && cd build
+    ```
+
+3.  **Configure the project with CMake**:
+    ```bash
+    cmake ..
+    ```
+
+4.  **Compile the project**:
     ```bash
     make
     ```
 
-3.  **Run the application**:
+5.  **Run the application**:
     ```bash
     ./MealManagementSystem
     ```
 
-You should now see the welcome menu for the Meal Management System!
+You should now see the login window for the Meal Management System!
 
 ## Project Structure 📂
 ```
 .
-├── src/                  # All C++ source and header files
-├── Makefile              # The build script for compiling the project
+├── build/                # Build files will be generated here
+├── include/              # C++ header files (.h)
+├── src/                  # C++ source files (.cpp)
+├── CMakeLists.txt        # The build script for CMake
 ├── schema.sql            # The complete SQL schema for setting up the database
 └── README.md             # You are here!
 ```

@@ -8,7 +8,7 @@
 
 bool addMenuItem(const std::string& name) {
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("INSERT INTO menu_items (name) VALUES (?)")
         );
@@ -29,7 +29,7 @@ bool addMenuItem(const std::string& name) {
 // Stubs for other functions to be implemented later
 bool editMenuItem(int id, const std::string& name) { 
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("UPDATE menu_items SET name = ? WHERE id = ?")
         );
@@ -44,7 +44,7 @@ bool editMenuItem(int id, const std::string& name) {
 
 bool deleteMenuItem(int id) { 
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("DELETE FROM menu_items WHERE id = ?")
         );
@@ -58,7 +58,7 @@ bool deleteMenuItem(int id) {
 std::vector<MenuItem> getAllMenuItems() {
     std::vector<MenuItem> items;
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::Statement> stmt(con->createStatement());
         std::unique_ptr<sql::ResultSet> res(
             stmt->executeQuery("SELECT id, name FROM menu_items ORDER BY name ASC")
@@ -77,7 +77,7 @@ std::vector<MenuItem> getAllMenuItems() {
 }
 
 bool setDailyMenu(const std::string& date, const std::vector<int>& breakfastItems, const std::vector<int>& lunchItems, const std::vector<int>& dinnerItems) {
-    sql::Connection* con = getConnection();
+            std::unique_ptr<sql::Connection> con(getConnection());
     if (!con) {
         std::cerr << "Failed to get database connection in setDailyMenu." << std::endl;
         return false;
@@ -124,7 +124,7 @@ DailyMenu getDailyMenu(const std::string& date) {
     dailyMenu.date = date; // Set the date for the returned struct
 
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement(
                 "SELECT dm.meal_type, mi.id, mi.name "
@@ -156,7 +156,7 @@ DailyMenu getDailyMenu(const std::string& date) {
 std::vector<DailyMenu> getMenuHistory() {
     std::vector<DailyMenu> menuHistory;
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::Statement> stmt(con->createStatement());
         std::unique_ptr<sql::ResultSet> res(stmt->executeQuery(
             "SELECT DATE_FORMAT(dm.menu_date, '%Y-%m-%d') AS menu_date, dm.meal_type, mi.id, mi.name "

@@ -4,7 +4,14 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/mysql-cppconn-8/"
+                "/usr/include/mysql-cppconn-8/",
+                "/usr/include/x86_64-linux-gnu/qt6/",
+                "/usr/include/x86_64-linux-gnu/qt6/QtCore/",
+                "/usr/include/x86_64-linux-gnu/qt6/QtGui/",
+                "/usr/include/x86_64-linux-gnu/qt6/QtWidgets/",
+                "/usr/include/x86_64-linux-gnu/qt6/QtNetwork/",
+                "/usr/include/x86_64-linux-gnu/qt6/QtMultimedia/",
+                "/usr/include/x86_64-linux-gnu/qt6/QtSql/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

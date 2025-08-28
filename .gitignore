@@ -1,0 +1,21 @@
+# Build artifacts
+/build/
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/Makefile
+/Makefile.mk
+/MealManagementSystem
+/MealManagementSystem_autogen/
+
+# Local configuration
+config.ini
+
+# VSCode local settings
+.vscode/
+
+# SQL session state
+MealManagementDB.session.sql
+
+# Object files
+*.o

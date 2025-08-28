@@ -1,4 +1,5 @@
 #include "expense.h"
+#include "user.h"
 #include "database.h"
 #include <cppconn/resultset.h>
 #include <cppconn/prepared_statement.h>
@@ -8,7 +9,7 @@
 
 bool addExpense(const std::string& purchase_date, const std::string& item_name, double price, int paid_by_user_id, const std::string& category) {
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         // Using STR_TO_DATE to convert the string date from the user to a SQL DATE type
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("INSERT INTO expenses (purchase_date, item_name, price, paid_by_user_id, category) VALUES (STR_TO_DATE(?, '%Y-%m-%d'), ?, ?, ?, ?)")
@@ -31,7 +32,7 @@ bool addExpense(const std::string& purchase_date, const std::string& item_name, 
 
 bool editExpense(int id, const std::string& item_name, double price, const std::string& category) {
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("UPDATE expenses SET item_name = ?, price = ?, category = ? WHERE id = ?")
         );
@@ -47,7 +48,7 @@ bool editExpense(int id, const std::string& item_name, double price, const std::
 }
 bool deleteExpense(int id) {
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement("DELETE FROM expenses WHERE id = ?")
         );
@@ -61,7 +62,7 @@ bool deleteExpense(int id) {
 std::vector<Expense> getAllExpenses() {
     std::vector<Expense> expenses;
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::Statement> stmt(con->createStatement());
         // Join with the users table to get the name of the person who paid
         std::unique_ptr<sql::ResultSet> res(stmt->executeQuery(
@@ -88,7 +89,7 @@ std::vector<Expense> getAllExpenses() {
 std::vector<Expense> getExpensesByCategory(const std::string& category) {
     std::vector<Expense> expenses;
     try {
-        sql::Connection* con = getConnection();
+        std::unique_ptr<sql::Connection> con(getConnection());
         std::unique_ptr<sql::PreparedStatement> pstmt(
             con->prepareStatement(
                 "SELECT e.id, DATE_FORMAT(e.purchase_date, '%Y-%m-%d') AS purchase_date, e.item_name, e.price, e.category, u.name AS paid_by_user_name "
