@@ -2,15 +2,6 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <openssl/evp.h> // Use modern EVP API for hashing
-#include <openssl/rand.h> // For salt generation
-#include <memory> // For std::unique_ptr
-#include <mysql_driver.h> // Include for sql::mysql::get_driver_instance()
-
-#include "database.h"
-#include <iostream>
-#include <sstream>
-#include <iomanip>
 #include <stdexcept>      // For std::runtime_error
 #include <openssl/evp.h> // Use modern EVP API for hashing
 #include <openssl/rand.h> // For salt generation

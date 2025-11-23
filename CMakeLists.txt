@@ -94,3 +94,17 @@ target_link_libraries(${PROJECT_NAME}
         ${MySQL_LIBRARIES}
         mysqlcppconn
         OpenSSL::SSL OpenSSL::Crypto)
+
+# --- Tests ---
+enable_testing()
+
+add_executable(test_crypto tests/test_crypto.cpp src/database.cpp)
+target_include_directories(test_crypto PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(test_crypto
+    PRIVATE
+        Qt6::Widgets
+        ${MySQL_LIBRARIES}
+        mysqlcppconn
+        OpenSSL::SSL OpenSSL::Crypto)
+
+add_test(NAME CryptoTest COMMAND test_crypto)
