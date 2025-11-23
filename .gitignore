@@ -19,3 +19,9 @@ MealManagementDB.session.sql
 
 # Object files
 *.o
+
+# OS specific
+.DS_Store
+
+# Qt Creator
+*.user
